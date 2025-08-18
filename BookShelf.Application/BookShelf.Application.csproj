@@ -10,4 +10,9 @@
     <ProjectReference Include="..\BookShelf.Core\BookShelf.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
