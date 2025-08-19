@@ -6,13 +6,34 @@ using System.Threading.Tasks;
 
 namespace BookShelf.Core.Entities
 {
+
+    public enum BookAccessType
+    {
+        Free = 1,
+        Premium = 2,
+        Paid = 3
+    }
+
+
     public class Book
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Author { get; set; } = string.Empty;
-        public int Price { get; set; }
-        public bool IsPremium { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string Title { get; set; }
+        public string Author { get; set; }
+        public string Description { get; set; }
+        public string FileUrl { get; set; }   // PDF file link
+        public string CoverImageUrl { get; set; }
+
+        // Free / Premium / Paid
+        public BookAccessType AccessType { get; set; }
+        public decimal? Price { get; set; }
+
+        public DateTime PublishedDate { get; set; }
+
+        // Relations
+        public ICollection<UserBook> UserBooks { get; set; }
+        public ICollection<Purchase> Purchases { get; set; }
     }
+
+
 }

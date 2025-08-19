@@ -13,5 +13,8 @@ namespace BookShelf.Infrastructure.Persistence
         public BookShelfDbContext(DbContextOptions<BookShelfDbContext> options) : base(options) { }
       
         public DbSet<Book> Books { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<UserBook> UserBooks { get; set; }
+        public DbSet<Purchase> Purchases { get; set; }
     }
 }

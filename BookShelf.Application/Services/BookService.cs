@@ -25,7 +25,6 @@ namespace BookShelf.Application.Services
                 Title = dto.Title,
                 Author = dto.Author,
                 Price = dto.Price,
-                IsPremium = dto.IsPremium
             };
             await _bookRepository.AddAsync(book);
             return book;
