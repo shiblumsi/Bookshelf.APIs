@@ -42,10 +42,10 @@ namespace BookShelf.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("me")]
-        public async Task<IActionResult> GetMe()
+        [HttpGet("profile")]
+        public async Task<IActionResult> UserProfile()
         {
-            var userId = int.Parse(User.FindFirst("sub")?.Value ?? "0");
+            var userId = int.Parse(User.FindFirst("userId")?.Value ?? "0");
             var result = await _authService.GetUserById(userId);
             return StatusCode(result.ResponseCode, result);
         }

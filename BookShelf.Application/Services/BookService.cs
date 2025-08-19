@@ -1,4 +1,5 @@
 ﻿using BookShelf.Application.DTOs;
+using BookShelf.Application.Interface;
 using BookShelf.Core.Entities;
 using BookShelf.Core.Interfaces;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BookShelf.Application.Services
 {
-    public class BookService
+    public class BookService : IBookService
     {
         private readonly IBookRepository _bookRepository;
 
@@ -24,15 +25,22 @@ namespace BookShelf.Application.Services
             {
                 Title = dto.Title,
                 Author = dto.Author,
+                Description = dto.Description,
+                FileUrl = dto.FileUrl,
+                CoverImageUrl = dto.CoverImageUrl,
+                AccessType = (BookAccessType)dto.AccessType,
                 Price = dto.Price,
+                PublishedDate = dto.PublishedDate
             };
+
             await _bookRepository.AddAsync(book);
             return book;
         }
 
         public async Task<List<Book>> GetAllBooks()
         {
-            return await _bookRepository.GetAllAsync();
+            var books = await _bookRepository.GetAllAsync();
+            return books.ToList();
         }
 
         public async Task<Book> GetBookById(int id)
@@ -44,7 +52,5 @@ namespace BookShelf.Application.Services
         {
             await _bookRepository.DeleteAsync(id);
         }
-
-        
     }
 }

@@ -1,5 +1,6 @@
 ﻿using BookShelf.Application.Common;
 using BookShelf.Application.DTOs;
+using BookShelf.Application.Interface;
 using BookShelf.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +12,8 @@ namespace BookShelf.API.Controllers
     [ApiController]
     public class BooksController : ControllerBase
     {
-        private readonly BookService _bookService;
-        public BooksController(BookService bookService) 
+        private readonly IBookService _bookService;
+        public BooksController(IBookService bookService) 
         {
             _bookService = bookService;
         }

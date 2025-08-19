@@ -13,41 +13,44 @@ namespace BookShelf.Infrastructure.Repositories
     public class BookRepository : IBookRepository
     {
         private readonly BookShelfDbContext _context;
-        public BookRepository(BookShelfDbContext dbContext)
+
+        public BookRepository(BookShelfDbContext context)
         {
-            _context = dbContext;
+            _context = context;
         }
 
-        public async Task AddAsync(Book book)
+        public async Task<Book> AddAsync(Book book)
         {
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
+            return book;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var book = await _context.Books.FindAsync(id);
-            if (book != null)
-            {
-                _context.Books.Remove(book);
-                await _context.SaveChangesAsync();
-            }
+            if (book == null) return false;
+
+            _context.Books.Remove(book);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
-        public async Task<List<Book>> GetAllAsync()
+        public async Task<IEnumerable<Book>> GetAllAsync()
         {
             return await _context.Books.ToListAsync();
         }
 
         public async Task<Book> GetByIdAsync(int id)
         {
-            return await _context.Books.FindAsync(id) ?? throw new Exception("Book Not Found!");
+            return await _context.Books.FindAsync(id);
         }
 
-        public async Task UpdateAsync(Book book)
+        public async Task<Book> UpdateAsync(Book book)
         {
             _context.Books.Update(book);
             await _context.SaveChangesAsync();
+            return book;
         }
     }
 }

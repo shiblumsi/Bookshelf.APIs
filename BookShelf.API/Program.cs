@@ -10,13 +10,48 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// ------------------------ Add Controllers ------------------------
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+// ------------------------ Swagger with JWT ------------------------
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "BookShelf API",
+        Version = "v1",
+        Description = "BookShelf API with JWT authentication"
+    });
+
+    // JWT Authentication
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Enter 'Bearer' [space] and then your token.\r\nExample: \"Bearer abc123\""
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
+// ------------------------ Database ------------------------
 builder.Services.AddDbContext<BookShelfDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DevConnection"),
@@ -24,8 +59,7 @@ builder.Services.AddDbContext<BookShelfDbContext>(options =>
     )
 );
 
-
-// JWT configuration
+// ------------------------ JWT Configuration ------------------------
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings.GetValue<string>("SecretKey");
 
@@ -45,30 +79,34 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
         ValidAudience = jwtSettings.GetValue<string>("Audience"),
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.Zero // Token expiration strict
+        ClockSkew = TimeSpan.Zero
     };
 });
 
-
-// Dependency Injections
+// ------------------------ Dependency Injection ------------------------
 builder.Services.AddScoped<IBookRepository, BookRepository>();
-builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
-
+builder.Services.AddScoped<IUserBookRepository, UserBookRepository>();
+builder.Services.AddScoped<IUserBookService, UserBookService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ------------------------ Middleware ------------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BookShelf API V1");
+        c.RoutePrefix = "swagger";
+    });
 }
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

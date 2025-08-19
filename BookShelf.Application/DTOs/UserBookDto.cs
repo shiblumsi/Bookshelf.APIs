@@ -6,15 +6,12 @@ using System.Threading.Tasks;
 
 namespace BookShelf.Application.DTOs
 {
-    public class BookDto
+    public class UserBookDto
     {
         public string Title { get; set; }
         public string Author { get; set; }
-        public string Description { get; set; }
         public string FileUrl { get; set; }
         public string CoverImageUrl { get; set; }
-        public int AccessType { get; set; }   // BookAccessType enum
-        public decimal? Price { get; set; }
-        public DateTime PublishedDate { get; set; }
+
     }
 }
