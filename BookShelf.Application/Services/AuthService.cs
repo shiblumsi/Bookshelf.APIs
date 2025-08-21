@@ -15,6 +15,7 @@ using System.Security.Claims;
 
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using BookShelf.Application.DTOs.Users;
 
 namespace BookShelf.Application.Services
 {
@@ -29,131 +30,57 @@ namespace BookShelf.Application.Services
             _userRepository = userRepository;
         }
 
-        public async Task<APIServiceResponse> Register(RegisterDto dto)
+        public async Task<UserResponseDto> RegisterAsync(RegisterUserRequestDto dto)
         {
-            var response = new APIServiceResponse { ResponseDateTime = DateTime.UtcNow.ToString("s") };
-            try
+            var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
+            if (existingUser != null)
             {
-                var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
-                if (existingUser != null)
-                {
-                    response.ResponseStatus = false;
-                    response.ErrMsg = "Email already registered";
-                    response.ResponseCode = 400;
-                    return response;
-                }
-
-                var user = new User
-                {
-                    FullName = dto.FullName,
-                    Email = dto.Email,
-                    PasswordHash = HashPassword(dto.Password)
-                };
-
-                await _userRepository.AddAsync(user);
-
-                response.ResponseStatus = true;
-                response.SuccessMsg = "User registered successfully";
-                response.ResponseCode = 201;
-                response.ResponseBusinessData = user;
+                throw new ApplicationException("Email already registered");
             }
-            catch (Exception ex)
+
+            if (dto.Password != dto.ConfirmPassword)
             {
-                response.ResponseStatus = false;
-                response.ErrMsg = ex.Message;
-                response.ResponseCode = 500;
+                throw new ApplicationException("Password and Confirm Password do not match");
             }
-            return response;
+
+
+
+            var user = new User
+            {
+                FullName = dto.FullName,
+                Email = dto.Email,
+                PasswordHash = HashPassword(dto.Password),
+            };
+
+             await _userRepository.AddAsync(user);
+
+            return new UserResponseDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                IsPremiumActive = user.IsPremiumActive
+            };
         }
 
-        public async Task<APIServiceResponse> Login(LoginDto dto)
+        public async Task<UserResponseDto> Login(LoginRequestDto dto)
         {
-            var response = new APIServiceResponse { ResponseDateTime = DateTime.UtcNow.ToString("s") };
-            try
-            {
-                var user = await _userRepository.GetByEmailAsync(dto.Email);
-                if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
-                {
-                    response.ResponseStatus = false;
-                    response.ErrMsg = "Invalid credentials";
-                    response.ResponseCode = 401;
-                    return response;
-                }
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+            if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
+                return null;
 
-                var token = GenerateJwtToken(user);
-
-                response.ResponseStatus = true;
-                response.SuccessMsg = "Login successful";
-                response.ResponseCode = 200;
-                response.ResponseBusinessData = new { user.Id, user.FullName, user.Email, Token = token };
-            }
-            catch (Exception ex)
+            var token = GenerateJwtToken(user);
+            return new UserResponseDto
             {
-                response.ResponseStatus = false;
-                response.ErrMsg = ex.Message;
-                response.ResponseCode = 500;
-            }
-            return response;
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                IsPremiumActive=user.IsPremiumActive,
+                AccessToken = token,
+            };
         }
 
-        public async Task<APIServiceResponse> UpgradePremium(int userId)
-        {
-            var response = new APIServiceResponse { ResponseDateTime = DateTime.UtcNow.ToString("s") };
-            try
-            {
-                var user = await _userRepository.GetByIdAsync(userId);
-                if (user == null)
-                {
-                    response.ResponseStatus = false;
-                    response.ErrMsg = "User not found";
-                    response.ResponseCode = 404;
-                    return response;
-                }
-
-                user.IsPremium = true;
-                await _userRepository.UpdateAsync(user);
-
-                response.ResponseStatus = true;
-                response.SuccessMsg = "User upgraded to premium";
-                response.ResponseCode = 200;
-                response.ResponseBusinessData = user;
-            }
-            catch (Exception ex)
-            {
-                response.ResponseStatus = false;
-                response.ErrMsg = ex.Message;
-                response.ResponseCode = 500;
-            }
-            return response;
-        }
-
-        public async Task<APIServiceResponse> GetUserById(int userId)
-        {
-            var response = new APIServiceResponse { ResponseDateTime = DateTime.UtcNow.ToString("s") };
-            try
-            {
-                var user = await _userRepository.GetByIdAsync(userId);
-                if (user == null)
-                {
-                    response.ResponseStatus = false;
-                    response.ErrMsg = "User not found";
-                    response.ResponseCode = 404;
-                    return response;
-                }
-
-                response.ResponseStatus = true;
-                response.SuccessMsg = "User fetched successfully";
-                response.ResponseCode = 200;
-                response.ResponseBusinessData = user;
-            }
-            catch (Exception ex)
-            {
-                response.ResponseStatus = false;
-                response.ErrMsg = ex.Message;
-                response.ResponseCode = 500;
-            }
-            return response;
-        }
+        
 
         // Helpers
         private string HashPassword(string password)

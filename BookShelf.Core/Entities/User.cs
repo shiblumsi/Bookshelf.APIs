@@ -8,18 +8,19 @@ namespace BookShelf.Core.Entities
 {
     public class User
     {
-        public int Id { get; set; }
-        public string FullName { get; set; }
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
+        public Guid Id { get; set; }
+        public required string FullName { get; set; }
+        public required string Email { get; set; }
+        public required string PasswordHash { get; set; }
 
-        // Premium Access
-        public bool IsPremium { get; set; }
-        public DateTime? PremiumExpiryDate { get; set; }
+        public bool IsPremiumActive =>
+            Subscriptions?.Any(s => s.IsActive) ?? false;
 
         // Relations
-        public ICollection<UserBook> UserBooks { get; set; }
-        public ICollection<Purchase> Purchases { get; set; }
+        public ICollection<UserBook>? UserBooks { get; set; }
+        public ICollection<Purchase>? Purchases { get; set; }
+        public ICollection<Review>? Reviews { get; set; }
+        public ICollection<UserSubscription>? Subscriptions { get; set; }
     }
 
 }

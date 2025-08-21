@@ -13,6 +13,19 @@ var builder = WebApplication.CreateBuilder(args);
 // ------------------------ Add Controllers ------------------------
 builder.Services.AddControllers();
 
+
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200", "https://localhost:4200") // Angular app URL
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 // ------------------------ Swagger with JWT ------------------------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -88,8 +101,10 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserBookRepository, UserBookRepository>();
-builder.Services.AddScoped<IUserBookService, UserBookService>();
+//builder.Services.AddScoped<IUserBookRepository, UserBookRepository>();
+//builder.Services.AddScoped<IUserBookService, UserBookService>();
+builder.Services.AddScoped<IBookCategoryRepository, BookCategoryRepository>();
+builder.Services.AddScoped<IBookCategoryService, BookCategoryService>();
 
 var app = builder.Build();
 
@@ -106,8 +121,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+//  Use CORS before MapControllers
+app.UseCors("AllowAngularApp");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapControllers();
 

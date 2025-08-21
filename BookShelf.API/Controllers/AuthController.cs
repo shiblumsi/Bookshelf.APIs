@@ -1,9 +1,14 @@
-﻿using BookShelf.Application.DTOs;
+﻿using BookShelf.Application.Common;
+using BookShelf.Application.DTOs;
+using BookShelf.Application.DTOs.Responses;
+using BookShelf.Application.DTOs.Users;
 using BookShelf.Application.Interface;
 using BookShelf.Application.Services;
+using BookShelf.Core.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace BookShelf.API.Controllers
 {
@@ -19,35 +24,37 @@ namespace BookShelf.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterUserRequestDto dto)
         {
-            var result = await _authService.Register(dto);
-            return StatusCode(result.ResponseCode, result);
+            try
+            {
+                var createdUser = await _authService.RegisterAsync(dto);
+                return Ok(ApiResponse<UserResponseDto>.Success(createdUser, "User registered successfully", HttpStatusCode.Created));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message, HttpStatusCode.InternalServerError));
+            }
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
         {
-            var result = await _authService.Login(dto);
-            return StatusCode(result.ResponseCode, result);
+            try
+            {
+                var loginResult = await _authService.Login(dto);
+                if (loginResult == null)
+                    return Unauthorized(ApiResponse<string>.Fail("Invalid email or password", HttpStatusCode.Unauthorized));
+
+                return Ok(ApiResponse<UserResponseDto>.Success(loginResult, "Login successful"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message, HttpStatusCode.InternalServerError));
+            }
         }
 
-        [Authorize]
-        [HttpPost("upgrade-premium")]
-        public async Task<IActionResult> UpgradePremium()
-        {
-            var userId = int.Parse(User.FindFirst("sub")?.Value ?? "0");
-            var result = await _authService.UpgradePremium(userId);
-            return StatusCode(result.ResponseCode, result);
-        }
 
-        [Authorize]
-        [HttpGet("profile")]
-        public async Task<IActionResult> UserProfile()
-        {
-            var userId = int.Parse(User.FindFirst("userId")?.Value ?? "0");
-            var result = await _authService.GetUserById(userId);
-            return StatusCode(result.ResponseCode, result);
-        }
+
     }
 }

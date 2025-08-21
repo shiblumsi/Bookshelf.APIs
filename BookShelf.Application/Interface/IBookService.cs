@@ -1,4 +1,5 @@
 ﻿using BookShelf.Application.DTOs;
+using BookShelf.Application.DTOs.Books;
 using BookShelf.Core.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,9 +11,10 @@ namespace BookShelf.Application.Interface
 {
     public interface IBookService
     {
-        Task<Book> AddBook(BookDto dto);
-        Task<List<Book>> GetAllBooks();
-        Task<Book> GetBookById(int id);
-        Task DeleteBook(int id);
+        Task<List<BookResponseDto>> GetAllAsync();
+        Task<BookResponseDto?> GetByIdAsync(Guid id);
+        Task<BookResponseDto> AddAsync(AddBookRequestDto dto);
+        Task<BookResponseDto?> UpdateAsync(Guid id, AddBookRequestDto dto);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

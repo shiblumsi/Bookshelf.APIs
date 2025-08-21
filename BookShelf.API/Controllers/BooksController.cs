@@ -1,141 +1,104 @@
 ﻿using BookShelf.Application.Common;
 using BookShelf.Application.DTOs;
+using BookShelf.Application.DTOs.Books;
 using BookShelf.Application.Interface;
 using BookShelf.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace BookShelf.API.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class BooksController : ControllerBase
+    [Route("api/[controller]")]
+    public class BookController : ControllerBase
     {
-        private readonly IBookService _bookService;
-        public BooksController(IBookService bookService) 
+        private readonly IBookService _service;
+
+        public BookController(IBookService service)
         {
-            _bookService = bookService;
+            _service = service;
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            try
+            {
+                var books = await _service.GetAllAsync();
+                return Ok(ApiResponse<List<BookResponseDto>>.Success(books, "Books fetched successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message, HttpStatusCode.InternalServerError));
+            }
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            try
+            {
+                var book = await _service.GetByIdAsync(id);
+                if (book == null)
+                    return NotFound(ApiResponse<string>.Fail("Book not found", HttpStatusCode.NotFound));
+
+                return Ok(ApiResponse<BookResponseDto>.Success(book, "Book fetched successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message, HttpStatusCode.InternalServerError));
+            }
         }
 
         [HttpPost("add")]
-        public async Task<APIServiceResponse> AddBook(APIServiceRequest reqObject)
+        public async Task<IActionResult> Add([FromBody] AddBookRequestDto dto)
         {
-            var objResponse = new APIServiceResponse();
             try
             {
-                objResponse.RequestDateTime = reqObject.RequestDateTime;
-
-                var dto = JsonConvert.DeserializeObject<BookDto>(reqObject.BusinessData.ToString());
-                var addedBook = await _bookService.AddBook(dto);
-
-                objResponse.ResponseStatus = true;
-                objResponse.ResponseDateTime = DateTime.Now.ToString();
-                objResponse.SuccessMsg = "Book added successfully";
-                objResponse.ResponseBusinessData = addedBook;
-                objResponse.ResponseCode = 200;
+                var created = await _service.AddAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id },
+                    ApiResponse<BookResponseDto>.Success(created, "Book created successfully"));
             }
             catch (Exception ex)
             {
-                objResponse.ResponseStatus = false;
-                objResponse.ResponseCode = 500;
-                objResponse.ErrMsg = ex.InnerException != null ? ex.GetBaseException().Message : ex.Message;
-                objResponse.ResponseDateTime = DateTime.Now.ToString();
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message, HttpStatusCode.InternalServerError));
             }
-
-            return objResponse;
         }
 
-
-        [HttpGet("get-all")]
-        public async Task<APIServiceResponse> GetAllBooks()
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] AddBookRequestDto dto)
         {
-            var objResponse = new APIServiceResponse();
-            objResponse.RequestDateTime = DateTime.Now.ToString();
-
             try
             {
-                var books = await _bookService.GetAllBooks();
+                var updated = await _service.UpdateAsync(id, dto);
+                if (updated == null)
+                    return NotFound(ApiResponse<string>.Fail("Book not found", HttpStatusCode.NotFound));
 
-                objResponse.ResponseStatus = true;
-                objResponse.ResponseDateTime = DateTime.Now.ToString();
-                objResponse.SuccessMsg = "Books fetched successfully";
-                objResponse.ResponseBusinessData = books;
-                objResponse.TotalRecords = books.Count;
-                objResponse.ResponseCode = 200;
+                return Ok(ApiResponse<BookResponseDto>.Success(updated, "Book updated successfully"));
             }
             catch (Exception ex)
             {
-                objResponse.ResponseStatus = false;
-                objResponse.ResponseCode = 500;
-                objResponse.ErrMsg = ex.InnerException != null ? ex.GetBaseException().Message : ex.Message;
-                objResponse.ResponseDateTime = DateTime.Now.ToString();
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message, HttpStatusCode.InternalServerError));
             }
-
-            return objResponse;
         }
 
-        [HttpGet("get/{id}")]
-        public async Task<APIServiceResponse> GetBook(int id)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var objResponse = new APIServiceResponse();
-            objResponse.RequestDateTime = DateTime.Now.ToString();
-
             try
             {
-                var book = await _bookService.GetBookById(id);
+                var result = await _service.DeleteAsync(id);
+                if (!result)
+                    return NotFound(ApiResponse<string>.Fail("Book not found", HttpStatusCode.NotFound));
 
-                if (book != null)
-                {
-                    objResponse.ResponseStatus = true;
-                    objResponse.ResponseDateTime = DateTime.Now.ToString();
-                    objResponse.SuccessMsg = "Book fetched successfully";
-                    objResponse.ResponseBusinessData = book;
-                    objResponse.ResponseCode = 200;
-                }
-                else
-                {
-                    objResponse.ResponseStatus = false;
-                    objResponse.ResponseCode = 404;
-                    objResponse.ErrMsg = "Book not found";
-                }
+                return Ok(ApiResponse<bool>.Success(true, "Book deleted successfully"));
             }
             catch (Exception ex)
             {
-                objResponse.ResponseStatus = false;
-                objResponse.ResponseCode = 500;
-                objResponse.ErrMsg = ex.InnerException != null ? ex.GetBaseException().Message : ex.Message;
-                objResponse.ResponseDateTime = DateTime.Now.ToString();
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message, HttpStatusCode.InternalServerError));
             }
-
-            return objResponse;
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<APIServiceResponse> DeleteBook(int id)
-        {
-            var objResponse = new APIServiceResponse();
-            objResponse.RequestDateTime = DateTime.Now.ToString();
-
-            try
-            {
-                await _bookService.DeleteBook(id);
-
-                objResponse.ResponseStatus = true;
-                objResponse.ResponseDateTime = DateTime.Now.ToString();
-                objResponse.SuccessMsg = "Book deleted successfully";
-                objResponse.ResponseBusinessData = $"Book with ID {id} deleted";
-                objResponse.ResponseCode = 200;
-            }
-            catch (Exception ex)
-            {
-                objResponse.ResponseStatus = false;
-                objResponse.ResponseCode = 500;
-                objResponse.ErrMsg = ex.InnerException != null ? ex.GetBaseException().Message : ex.Message;
-                objResponse.ResponseDateTime = DateTime.Now.ToString();
-            }
-
-            return objResponse;
         }
     }
 }

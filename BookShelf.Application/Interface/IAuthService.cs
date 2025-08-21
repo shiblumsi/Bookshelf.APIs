@@ -1,5 +1,6 @@
 ﻿using BookShelf.Application.Common;
 using BookShelf.Application.DTOs;
+using BookShelf.Application.DTOs.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,8 @@ namespace BookShelf.Application.Interface
 {
     public interface IAuthService
     {
-        Task<APIServiceResponse> Register(RegisterDto dto);
-        Task<APIServiceResponse> Login(LoginDto dto);
-        Task<APIServiceResponse> UpgradePremium(int userId);
-        Task<APIServiceResponse> GetUserById(int userId);
+        Task<UserResponseDto> RegisterAsync(RegisterUserRequestDto dto);
+        Task<UserResponseDto> Login(LoginRequestDto dto);
+       
     }
 }

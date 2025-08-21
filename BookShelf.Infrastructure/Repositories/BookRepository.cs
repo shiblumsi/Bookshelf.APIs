@@ -13,10 +13,21 @@ namespace BookShelf.Infrastructure.Repositories
     public class BookRepository : IBookRepository
     {
         private readonly BookShelfDbContext _context;
+        public BookRepository(BookShelfDbContext context) => _context = context;
 
-        public BookRepository(BookShelfDbContext context)
+        public async Task<List<Book>> GetAllAsync()
         {
-            _context = context;
+            return await _context.Books
+                .Include(b => b.Category)
+                .Where(b => !b.IsDeleted)
+                .ToListAsync();
+        }
+
+        public async Task<Book?> GetByIdAsync(Guid id)
+        {
+            return await _context.Books
+                .Include(b => b.Category)
+                .FirstOrDefaultAsync(b => b.Id == id && !b.IsDeleted);
         }
 
         public async Task<Book> AddAsync(Book book)
@@ -26,31 +37,24 @@ namespace BookShelf.Infrastructure.Repositories
             return book;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<Book?> UpdateAsync(Book book)
         {
-            var book = await _context.Books.FindAsync(id);
-            if (book == null) return false;
+            var existing = await _context.Books.FirstOrDefaultAsync(b => b.Id == book.Id && !b.IsDeleted);
+            if (existing == null) return null;
 
-            _context.Books.Remove(book);
+            _context.Entry(existing).CurrentValues.SetValues(book);
+            await _context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var existing = await _context.Books.FirstOrDefaultAsync(b => b.Id == id && !b.IsDeleted);
+            if (existing == null) return false;
+
+            existing.IsDeleted = true;
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        public async Task<IEnumerable<Book>> GetAllAsync()
-        {
-            return await _context.Books.ToListAsync();
-        }
-
-        public async Task<Book> GetByIdAsync(int id)
-        {
-            return await _context.Books.FindAsync(id);
-        }
-
-        public async Task<Book> UpdateAsync(Book book)
-        {
-            _context.Books.Update(book);
-            await _context.SaveChangesAsync();
-            return book;
         }
     }
 }
