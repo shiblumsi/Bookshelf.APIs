@@ -34,14 +34,40 @@ namespace BookShelf.Application.Services
 
         public async Task<BookResponseDto> AddAsync(AddBookRequestDto dto)
         {
+            // Create folder if not exists
+            var booksFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "books");
+            var coversFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "covers");
+
+            Directory.CreateDirectory(booksFolder);
+            Directory.CreateDirectory(coversFolder);
+
+            // Save Book File (PDF, EPUB, etc.)
+            var bookFileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
+            var bookFilePath = Path.Combine(booksFolder, bookFileName);
+            using (var stream = new FileStream(bookFilePath, FileMode.Create))
+            {
+                await dto.File.CopyToAsync(stream);
+            }
+
+            // Save Cover Image
+            var coverFileName = Guid.NewGuid() + Path.GetExtension(dto.CoverImage.FileName);
+            var coverFilePath = Path.Combine(coversFolder, coverFileName);
+            using (var stream = new FileStream(coverFilePath, FileMode.Create))
+            {
+                await dto.CoverImage.CopyToAsync(stream);
+            }
+
+            // Build accessible URLs (these will be served by ASP.NET Core Static Files)
+            var bookUrl = $"/uploads/books/{bookFileName}";
+            var coverUrl = $"/uploads/covers/{coverFileName}";
             var book = new Book
             {
                 Title = dto.Title,
                 Author = dto.Author,
                 Description = dto.Description,
-                FileUrl = dto.FileUrl,
+                FileUrl = bookUrl,
                 Format = dto.Format,
-                CoverImageUrl = dto.CoverImageUrl,
+                CoverImageUrl = coverUrl,
                 AccessType = dto.AccessType,
                 Price = dto.Price,
                 PublishedDate = dto.PublishedDate,
@@ -55,25 +81,75 @@ namespace BookShelf.Application.Services
 
         public async Task<BookResponseDto?> UpdateAsync(Guid id, AddBookRequestDto dto)
         {
-            var book = new Book
-            {
-                Id = id,
-                Title = dto.Title,
-                Author = dto.Author,
-                Description = dto.Description,
-                FileUrl = dto.FileUrl,
-                Format = dto.Format,
-                CoverImageUrl = dto.CoverImageUrl,
-                AccessType = dto.AccessType,
-                Price = dto.Price,
-                PublishedDate = dto.PublishedDate,
-                CategoryId = dto.CategoryId,
-                UpdatedDate = DateTime.UtcNow
-            };
+            var existingBook = await _repository.GetByIdAsync(id);
+            if (existingBook == null) return null;
 
-            var updated = await _repository.UpdateAsync(book);
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            // File Update
+            if (dto.File != null)
+            {
+                string fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
+                string filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.File.CopyToAsync(stream);
+                }
+
+                // পুরোনো file মুছে ফেলা (optional)
+                if (!string.IsNullOrEmpty(existingBook.FileUrl))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingBook.FileUrl.TrimStart('/'));
+                    if (File.Exists(oldFilePath))
+                    {
+                        File.Delete(oldFilePath);
+                    }
+                }
+
+                existingBook.FileUrl = "/uploads/" + fileName;
+            }
+
+            // Cover Image Update
+            if (dto.CoverImage != null)
+            {
+                string coverFileName = Guid.NewGuid() + Path.GetExtension(dto.CoverImage.FileName);
+                string coverPath = Path.Combine(uploadsFolder, coverFileName);
+
+                using (var stream = new FileStream(coverPath, FileMode.Create))
+                {
+                    await dto.CoverImage.CopyToAsync(stream);
+                }
+
+                if (!string.IsNullOrEmpty(existingBook.CoverImageUrl))
+                {
+                    var oldCoverPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingBook.CoverImageUrl.TrimStart('/'));
+                    if (File.Exists(oldCoverPath))
+                    {
+                        File.Delete(oldCoverPath);
+                    }
+                }
+
+                existingBook.CoverImageUrl = "/uploads/" + coverFileName;
+            }
+
+            // Update Other Properties
+            existingBook.Title = dto.Title;
+            existingBook.Author = dto.Author;
+            existingBook.Description = dto.Description;
+            existingBook.Format = dto.Format;
+            existingBook.AccessType = dto.AccessType;
+            existingBook.Price = dto.Price;
+            existingBook.PublishedDate = dto.PublishedDate;
+            existingBook.CategoryId = dto.CategoryId;
+            existingBook.UpdatedDate = DateTime.UtcNow;
+
+            var updated = await _repository.UpdateAsync(existingBook);
             return updated == null ? null : MapToDto(updated);
         }
+
 
         public async Task<bool> DeleteAsync(Guid id)
         {

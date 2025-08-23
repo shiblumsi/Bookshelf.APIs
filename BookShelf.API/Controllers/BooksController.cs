@@ -53,7 +53,7 @@ namespace BookShelf.API.Controllers
         }
 
         [HttpPost("add")]
-        public async Task<IActionResult> Add([FromBody] AddBookRequestDto dto)
+        public async Task<IActionResult> Add([FromForm] AddBookRequestDto dto)
         {
             try
             {

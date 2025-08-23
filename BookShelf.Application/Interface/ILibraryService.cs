@@ -1,4 +1,5 @@
 ﻿using BookShelf.Application.DTOs;
+using BookShelf.Application.DTOs.Library;
 using BookShelf.Core.Entities;
 using System;
 using System.Collections.Generic;
@@ -8,10 +9,9 @@ using System.Threading.Tasks;
 
 namespace BookShelf.Application.Interface
 {
-    public interface IUserBookService
+    public interface ILibraryService
     {
-        Task<UserBookDto> AddToLibraryAsync(int userId, int bookId);
-        Task<IEnumerable<UserBookDto>> GetLibraryAsync(int userId);
-        Task<bool> RemoveFromLibraryAsync(int userId, int bookId);
+        Task<LibraryBookResponseDto> AddBookAsync(Guid userId, Guid bookId);
+        Task<IEnumerable<LibraryBookResponseDto>> GetUserLibraryAsync(Guid userId);
     }
 }

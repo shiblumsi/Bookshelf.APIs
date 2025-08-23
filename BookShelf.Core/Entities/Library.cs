@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BookShelf.Core.Entities
 {
-    public class UserBook
+    public class Library
     {
         public Guid Id { get; set; }
 

@@ -17,7 +17,7 @@ namespace BookShelf.Core.Entities
             Subscriptions?.Any(s => s.IsActive) ?? false;
 
         // Relations
-        public ICollection<UserBook>? UserBooks { get; set; }
+        public ICollection<Library>? UserBooks { get; set; }
         public ICollection<Purchase>? Purchases { get; set; }
         public ICollection<Review>? Reviews { get; set; }
         public ICollection<UserSubscription>? Subscriptions { get; set; }

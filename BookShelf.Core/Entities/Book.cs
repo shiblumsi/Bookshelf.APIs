@@ -56,7 +56,7 @@ namespace BookShelf.Core.Entities
         public Guid CategoryId { get; set; }
         public Category? Category { get; set; }
 
-        public ICollection<UserBook>? UserBooks { get; set; }
+        public ICollection<Library>? UserBooks { get; set; }
         public ICollection<Purchase>? Purchases { get; set; }
         public ICollection<Review>? Reviews { get; set; }
     }

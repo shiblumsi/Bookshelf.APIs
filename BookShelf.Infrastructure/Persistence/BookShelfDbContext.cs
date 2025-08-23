@@ -15,7 +15,7 @@ namespace BookShelf.Infrastructure.Persistence
         public DbSet<Book> Books { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<UserBook> UserBooks { get; set; }
+        public DbSet<Library> Libraries { get; set; }
         public DbSet<Purchase> Purchases { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }

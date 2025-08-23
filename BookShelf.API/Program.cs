@@ -101,8 +101,8 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-//builder.Services.AddScoped<IUserBookRepository, UserBookRepository>();
-//builder.Services.AddScoped<IUserBookService, UserBookService>();
+builder.Services.AddScoped<ILibraryRepository,LibraryRepository>();
+builder.Services.AddScoped<ILibraryService, LibraryService>();
 builder.Services.AddScoped<IBookCategoryRepository, BookCategoryRepository>();
 builder.Services.AddScoped<IBookCategoryService, BookCategoryService>();
 
@@ -121,11 +121,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//  Use CORS before MapControllers
+
 app.UseCors("AllowAngularApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseStaticFiles();
 
 
 app.MapControllers();
