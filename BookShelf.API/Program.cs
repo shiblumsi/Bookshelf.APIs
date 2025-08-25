@@ -105,6 +105,8 @@ builder.Services.AddScoped<ILibraryRepository,LibraryRepository>();
 builder.Services.AddScoped<ILibraryService, LibraryService>();
 builder.Services.AddScoped<IBookCategoryRepository, BookCategoryRepository>();
 builder.Services.AddScoped<IBookCategoryService, BookCategoryService>();
+builder.Services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
+builder.Services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
 
 var app = builder.Build();
 

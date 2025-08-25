@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace BookShelf.Infrastructure.Persistence
 {
-    public class BookShelfDbContext:DbContext
+    public class BookShelfDbContext : DbContext
     {
         public BookShelfDbContext(DbContextOptions<BookShelfDbContext> options) : base(options) { }
-      
+
         public DbSet<Book> Books { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
@@ -20,6 +20,32 @@ namespace BookShelf.Infrastructure.Persistence
         public DbSet<Review> Reviews { get; set; }
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
         public DbSet<UserSubscription> UserSubscriptions { get; set; }
-        
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+
+            modelBuilder.Entity<UserSubscription>()
+                .HasOne(us => us.User)
+                .WithMany(u => u.UserSubscriptions)
+                .HasForeignKey(us => us.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasOne(pt => pt.Subscription)
+                .WithMany(us => us.Payments)
+                .HasForeignKey(pt => pt.SubscriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasOne(pt => pt.User)
+                .WithMany(u => u.PaymentTransactions)
+                .HasForeignKey(pt => pt.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }
