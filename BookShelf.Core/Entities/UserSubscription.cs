@@ -22,6 +22,6 @@ namespace BookShelf.Core.Entities
         // Helper property
         public bool IsActive => EndDate >= DateTime.UtcNow;
 
-        public ICollection<PaymentTransaction> Payments { get; set; } = new List<PaymentTransaction>();
+       
     }
 }

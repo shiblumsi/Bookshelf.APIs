@@ -19,5 +19,6 @@ namespace BookShelf.Core.Entities
 
         // Relations
         public ICollection<UserSubscription>? UserSubscriptions { get; set; }
+        public ICollection<PaymentTransaction>? PaymentTransactions { get; set; }
     }
 }

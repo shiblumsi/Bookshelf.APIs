@@ -24,28 +24,6 @@ namespace BookShelf.Infrastructure.Persistence
 
 
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-
-
-            modelBuilder.Entity<UserSubscription>()
-                .HasOne(us => us.User)
-                .WithMany(u => u.UserSubscriptions)
-                .HasForeignKey(us => us.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<PaymentTransaction>()
-                .HasOne(pt => pt.Subscription)
-                .WithMany(us => us.Payments)
-                .HasForeignKey(pt => pt.SubscriptionId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<PaymentTransaction>()
-                .HasOne(pt => pt.User)
-                .WithMany(u => u.PaymentTransactions)
-                .HasForeignKey(pt => pt.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-        }
+      
     }
 }

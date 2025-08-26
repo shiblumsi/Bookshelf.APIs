@@ -165,7 +165,7 @@ namespace BookShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("SubscriptionId")
+                    b.Property<Guid>("SubscriptionPlanId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TransactionId")
@@ -177,7 +177,7 @@ namespace BookShelf.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SubscriptionId");
+                    b.HasIndex("SubscriptionPlanId");
 
                     b.HasIndex("UserId");
 
@@ -355,19 +355,19 @@ namespace BookShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("BookShelf.Core.Entities.PaymentTransaction", b =>
                 {
-                    b.HasOne("BookShelf.Core.Entities.UserSubscription", "Subscription")
-                        .WithMany("Payments")
-                        .HasForeignKey("SubscriptionId")
+                    b.HasOne("BookShelf.Core.Entities.SubscriptionPlan", "Plan")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("SubscriptionPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("BookShelf.Core.Entities.User", "User")
                         .WithMany("PaymentTransactions")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Subscription");
+                    b.Navigation("Plan");
 
                     b.Navigation("User");
                 });
@@ -445,6 +445,8 @@ namespace BookShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("BookShelf.Core.Entities.SubscriptionPlan", b =>
                 {
+                    b.Navigation("PaymentTransactions");
+
                     b.Navigation("UserSubscriptions");
                 });
 
@@ -459,11 +461,6 @@ namespace BookShelf.Infrastructure.Migrations
                     b.Navigation("UserBooks");
 
                     b.Navigation("UserSubscriptions");
-                });
-
-            modelBuilder.Entity("BookShelf.Core.Entities.UserSubscription", b =>
-                {
-                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

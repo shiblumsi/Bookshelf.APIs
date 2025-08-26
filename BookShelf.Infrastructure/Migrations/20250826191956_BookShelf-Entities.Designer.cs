@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(BookShelfDbContext))]
-    [Migration("20250823214916_library")]
-    partial class library
+    [Migration("20250826191956_BookShelf-Entities")]
+    partial class BookShelfEntities
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -140,6 +140,51 @@ namespace BookShelf.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Libraries");
+                });
+
+            modelBuilder.Entity("BookShelf.Core.Entities.PaymentTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GatewayResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsSuccess")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentGateway")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SubscriptionPlanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionPlanId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PaymentTransactions");
                 });
 
             modelBuilder.Entity("BookShelf.Core.Entities.Purchase", b =>
@@ -311,6 +356,25 @@ namespace BookShelf.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BookShelf.Core.Entities.PaymentTransaction", b =>
+                {
+                    b.HasOne("BookShelf.Core.Entities.SubscriptionPlan", "Plan")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("SubscriptionPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookShelf.Core.Entities.User", "User")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Plan");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BookShelf.Core.Entities.Purchase", b =>
                 {
                     b.HasOne("BookShelf.Core.Entities.Book", "Book")
@@ -358,7 +422,7 @@ namespace BookShelf.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("BookShelf.Core.Entities.User", "User")
-                        .WithMany("Subscriptions")
+                        .WithMany("UserSubscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -384,18 +448,22 @@ namespace BookShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("BookShelf.Core.Entities.SubscriptionPlan", b =>
                 {
+                    b.Navigation("PaymentTransactions");
+
                     b.Navigation("UserSubscriptions");
                 });
 
             modelBuilder.Entity("BookShelf.Core.Entities.User", b =>
                 {
+                    b.Navigation("PaymentTransactions");
+
                     b.Navigation("Purchases");
 
                     b.Navigation("Reviews");
 
-                    b.Navigation("Subscriptions");
-
                     b.Navigation("UserBooks");
+
+                    b.Navigation("UserSubscriptions");
                 });
 #pragma warning restore 612, 618
         }
